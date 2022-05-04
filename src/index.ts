@@ -2,6 +2,7 @@ import express from 'express'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import { clientHandler, connectedClients } from './client_handler';
+import { locationHandler } from './location_handler';
 
 const app = express();
 
@@ -18,4 +19,5 @@ app.listen(PORT, () => {
 })
 
 app.get('/connect', clientHandler);
+app.post('/location', locationHandler)
 app.get('/status', (request, response) => response.json({clients: connectedClients.length}));
