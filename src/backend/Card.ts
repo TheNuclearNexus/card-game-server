@@ -31,6 +31,15 @@ export default interface Card {
     DP: number;             // Defense points, if a row 1 card
 }
 
+export function getCard(card?: string): Card|undefined {
+    if(!card) return undefined;
+
+    const dbCard = cardDatabase.find(c => c.name === card)
+    if(!dbCard) return undefined
+
+    return Object.assign({}, dbCard)
+}
+
 export let cardDatabase = [
     //row 1 Cards:
     {

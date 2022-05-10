@@ -11,5 +11,6 @@ export function locationHandler(request: Request, response: Response, next: Next
     c.x = x
     c.y = y
     console.log('send locations')
+    response.status(200).end()
     sendToAll(JSON.stringify({id: 'update-players', clients: connectedClients.map(c => ({id: c.id, x: c.x, y: c.y}))}))
 }

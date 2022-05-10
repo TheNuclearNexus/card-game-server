@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from "express";
-import { cardDatabase } from "./Card";
+import { battles, setBattles } from "./backend/Battle";
+import { getPlayerData, setPlayerData } from "./backend/Player";
+import { cardDatabase } from "./backend/Card";
 
 interface Client {
     id: string;
@@ -51,13 +53,45 @@ export function clientHandler(request: Request, response: Response, next: NextFu
         y: y
     };
 
-    connectedClients.push(newClient);
+    if(!connectedClients.find(c => c.id === clientId))
+        connectedClients.push(newClient);
+
+    if(!getPlayerData(clientId))
+        setPlayerData(clientId, {
+            inventory: [],
+            row1: {0:undefined, 1:undefined, 2:undefined, 3:undefined},
+            deck: []
+        })
 
     sendToAll(JSON.stringify({id: 'update-players', clients: getStrippedClients()}))
+
+    const b = battles.find(b => b.playerA.id === clientId || b.playerB.id === clientId)
+    if(b) {
+        sendToSpecific(clientId, JSON.stringify({id: 'start-battle', battle: b.serialize()}))
+    } else {
+        sendToSpecific(clientId, JSON.stringify({id: 'goto-overworld'}))
+    }
 
     request.on('close', () => {
         console.log(`${clientId} Connection closed`);
         connectedClients = connectedClients.filter(client => client.id !== clientId);
+        console.log(battles)
+
+        // setBattles(battles.filter(b => {
+        //     console.log(b)
+        //     if(b.playerA.id === clientId) {
+        //         console.log('Forfeitting ' + b.playerB.id + ' wins!')
+        //         sendToSpecific(b.playerB.id, JSON.stringify({id: 'end-battle', type: 'win', condition: 'forfeit'}))
+        //         return false
+        //     }
+        //     if(b.playerB.id === clientId) {
+        //         console.log('Forfeitting ' + b.playerA.id + ' wins!')
+        //         sendToSpecific(b.playerA.id, JSON.stringify({id: 'end-battle', type: 'win', condition: 'forfeit'}))
+        //         return false
+        //     }
+        //     return true;
+        // }))
+        sendToAll(JSON.stringify({id: 'update-players', clients: getStrippedClients()}))
     });
 }
 
