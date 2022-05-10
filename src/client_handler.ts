@@ -67,7 +67,7 @@ export function clientHandler(request: Request, response: Response, next: NextFu
 
     const b = battles.find(b => b.playerA.id === clientId || b.playerB.id === clientId)
     if(b) {
-        sendToSpecific(clientId, JSON.stringify({id: 'start-battle', battle: b.serialize()}))
+        sendToSpecific(clientId, JSON.stringify({id: 'start-battle', battle: b.serialize(), notNew: true}))
     } else {
         sendToSpecific(clientId, JSON.stringify({id: 'goto-overworld'}))
     }

@@ -32,6 +32,7 @@ class Battle {
     private _firstTurn: 'a' | 'b' = 'a'
     private _turnInterval: NodeJS.Timer
     private _turnNumber = 0
+    private _turnActions: {id: string, [key: string]: any}[] = []
 
     constructor(playerA: BattlePlayer, playerB: BattlePlayer) {
         this.playerA = playerA
@@ -42,47 +43,51 @@ class Battle {
     }
 
 
-    handleCard(a: BattlePlayer, aRow1: Card | undefined, aRow2: Card | undefined, b: BattlePlayer, bRow1: Card | undefined, bRow2: Card | undefined) {
+    handleCard(col: RowIndex, a: BattlePlayer, aRow1: Card | undefined, aRow2: Card | undefined, b: BattlePlayer, bRow1: Card | undefined, bRow2: Card | undefined) {
         if (!aRow1) return
 
         let modAP = aRow1.AP + (aRow2?.AP || 0)
-        console.log(aRow1.name, modAP);
+        // console.log(aRow1.name, modAP);
         if (bRow1 === undefined) {
             b.hp -= modAP
+            this._turnActions.push({id: 'damage-player', target: b.id, damage: modAP})
             return
         }
 
         if (bRow2 === undefined) {
             b.hp -= Math.max(modAP - bRow1.DP, 1)
+            this._turnActions.push({id: 'damage-player', target: b.id, damage: Math.max(modAP - bRow1.DP, 1)})
             return
         }
 
         bRow2.HP -= Math.max(1, modAP - (bRow1.DP + (bRow2.DP)))
+        this._turnActions.push({id: 'damage-card', target: b.id, col: col, damage: Math.max(1, modAP - (bRow1.DP + (bRow2.DP)))})
 
-        for (let r of rowIndexes) {
-            const card = b.row2[r]
-            if (!card || card.HP > 0) continue
-            b.row2[r] = undefined
-        }
+        const card = b.row2[col]
+        if (!card || card.HP > 0) return
+        b.row2[col] = undefined
     }
 
     serialize() {
-        return {
+        const serialized = {
             playerA: this.playerA,
             playerB: this.playerB,
             turn: {
                 number: this._turnNumber,
                 startTime: Date.now(),
-                endTime: Date.now() + turnTime * 1000
+                endTime: Date.now() + (turnTime),
+                actions: this._turnActions
             }
         }
+        console.log(serialized.turn)
+        return serialized 
     }
 
     handle(p1: BattlePlayer, p2: BattlePlayer): boolean {
-        this.handleCard(p1, p1.row1[0], p1.row2[0], p2, p2.row1[0], p2.row2[0])
-        this.handleCard(p1, p1.row1[1], p1.row2[1], p2, p2.row1[1], p2.row2[1])
-        this.handleCard(p1, p1.row1[2], p1.row2[2], p2, p2.row1[2], p2.row2[2])
-        this.handleCard(p1, p1.row1[3], p1.row2[3], p2, p2.row1[3], p2.row2[3])
+        this.handleCard(0, p1, p1.row1[0], p1.row2[0], p2, p2.row1[0], p2.row2[0])
+        this.handleCard(1, p1, p1.row1[1], p1.row2[1], p2, p2.row1[1], p2.row2[1])
+        this.handleCard(2, p1, p1.row1[2], p1.row2[2], p2, p2.row1[2], p2.row2[2])
+        this.handleCard(3, p1, p1.row1[3], p1.row2[3], p2, p2.row1[3], p2.row2[3])
 
         if (p2.hp > 0) return false
         p2.hp = 20
@@ -99,15 +104,18 @@ class Battle {
 
 
     turn() {
+        this._turnActions = [{id: 'turn-start'}]
         this._turnNumber++
         let first = this._firstTurn === 'a' ? this.playerA : this.playerB
         let second = this._firstTurn === 'a' ? this.playerB : this.playerA
 
-        if (this._turnNumber % turnsForCard) {
+        if (this._turnNumber % turnsForCard === 0) {
             if (first.deck.length >= 1 && first.hand.length <= 3)
                 first.hand.push(first.deck.shift() || '')
             if (second.deck.length >= 1 && second.hand.length <= 3)
                 second.hand.push(second.deck.shift() || '')
+
+            this._turnActions.push({id: 'draw'})
         }
 
         const firstWin = this.handle(first, second)
