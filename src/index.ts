@@ -4,6 +4,7 @@ import cors from 'cors'
 import { clientHandler, connectedClients } from './client_handler';
 import { locationHandler } from './location_handler';
 import { battleHandler } from './battle_handler';
+import { getPlayerHandler, postPlayerHandler } from './player_handler';
 
 const app = express();
 
@@ -26,6 +27,10 @@ app.get('/images', (req, res) => {
 app.get('/audio', (req, res) => {
   res.sendFile(process.cwd() + '/audio/' + req.query.name + '.mp3', {dotfiles: 'allow'});
 })
+
+app.get('/player', getPlayerHandler)
+app.post('/player', postPlayerHandler)
+
 app.get('/connect', clientHandler);
 app.post('/battle', battleHandler)
 app.post('/location', locationHandler)

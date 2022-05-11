@@ -56,12 +56,14 @@ export function clientHandler(request: Request, response: Response, next: NextFu
     if(!connectedClients.find(c => c.id === clientId))
         connectedClients.push(newClient);
 
-    if(!getPlayerData(clientId))
+    if(!getPlayerData(clientId)) {
+        const names = cardDatabase.sort((a,b) => a.type - b.type).map(c => c.name)
         setPlayerData(clientId, {
-            inventory: [],
+            inventory: names.concat(names, names, names).sort(),
             row1: {0:undefined, 1:undefined, 2:undefined, 3:undefined},
             deck: []
         })
+    }
 
     sendToAll(JSON.stringify({id: 'update-players', clients: getStrippedClients()}))
 

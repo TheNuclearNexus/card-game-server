@@ -1,14 +1,15 @@
 import Card from "./Card";
 import * as fs from 'fs'
 
+export interface Row {
+    0?: string
+    1?: string
+    2?: string
+    3?: string
+}
 export interface Player {
     inventory: string[]
-    row1: {
-        0?: string
-        1?: string
-        2?: string
-        3?: string
-    }
+    row1: Row,
     deck: string[]
 }
 

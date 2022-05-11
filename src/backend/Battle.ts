@@ -3,7 +3,7 @@ import Card, { cardDatabase, getCard } from "./Card"
 import { Player } from "./Player"
 
 type RowIndex = 0 | 1 | 2 | 3
-const rowIndexes: RowIndex[] = [0, 1, 2, 3]
+export const rowIndexes: RowIndex[] = [0, 1, 2, 3]
 interface Row {
     0?: Card,
     1?: Card,
@@ -22,7 +22,7 @@ interface BattlePlayer {
 }
 
 
-const turnTime = 5
+const turnTime = 3
 const turnsForCard = 5
 
 class Battle {
