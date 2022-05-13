@@ -2,7 +2,7 @@ import { sendToSpecific } from "../client_handler"
 import Card, { cardDatabase, getCard } from "./Card"
 import { Player } from "./Player"
 
-type RowIndex = 0 | 1 | 2 | 3
+export type RowIndex = 0 | 1 | 2 | 3
 export const rowIndexes: RowIndex[] = [0, 1, 2, 3]
 interface Row {
     0?: Card,
@@ -11,7 +11,7 @@ interface Row {
     3?: Card
 }
 
-interface BattlePlayer {
+export interface BattlePlayer {
     row1: Row
     row2: Row
     lives: number,
@@ -23,9 +23,10 @@ interface BattlePlayer {
 
 
 const turnTime = 3
-const turnsForCard = 5
+const turnsForCard = 4
+const startingHealth = 40
 
-class Battle {
+export class Battle {
     playerA: BattlePlayer
     playerB: BattlePlayer
 
@@ -63,6 +64,8 @@ class Battle {
         bRow2.HP -= Math.max(1, modAP - (bRow1.DP + (bRow2.DP)))
         this._turnActions.push({id: 'damage-card', target: b.id, col: col, damage: Math.max(1, modAP - (bRow1.DP + (bRow2.DP)))})
 
+        if(aRow1.ability) aRow1.ability(col, a, this)
+
         const card = b.row2[col]
         if (!card || card.HP > 0) return
         b.row2[col] = undefined
@@ -90,7 +93,7 @@ class Battle {
         this.handleCard(3, p1, p1.row1[3], p1.row2[3], p2, p2.row1[3], p2.row2[3])
 
         if (p2.hp > 0) return false
-        p2.hp = 20
+        p2.hp = startingHealth
         p2.lives -= 1
         if (p2.lives === 0) return true
         return false
@@ -104,7 +107,7 @@ class Battle {
 
 
     turn() {
-        this._turnActions = [{id: 'turn-start'}]
+        this._turnActions = [{id: 'turn-start'}] //
         this._turnNumber++
         let first = this._firstTurn === 'a' ? this.playerA : this.playerB
         let second = this._firstTurn === 'a' ? this.playerB : this.playerA
@@ -170,7 +173,7 @@ function setupPlayer(id: string, data: Player): BattlePlayer {
     return {
         id: id,
         lives: 2,
-        hp: 20,
+        hp: startingHealth,
         row1: convertRow1(data.row1),
         row2: { 0: undefined, 1: undefined, 2: undefined, 3: undefined },
         hand: getHand(data.deck),
